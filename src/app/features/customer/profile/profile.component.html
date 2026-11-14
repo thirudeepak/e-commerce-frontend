@@ -1,0 +1,278 @@
+<div class="container profile-container">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">User Account & Profile</h1>
+      <p class="page-subtitle">View your verified account credentials, RBAC role permissions, and shopping stats</p>
+    </div>
+    <a routerLink="/" class="btn btn-secondary btn-sm">
+      <i class="fa-solid fa-arrow-left"></i> Back to Store
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state card">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span>Loading user profile...</span>
+    </div>
+  } @else if (!user) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-user-xmark"></i></div>
+      <h3>User Profile Not Found</h3>
+      <p>Please sign in to view your account details.</p>
+      <a routerLink="/login" class="btn btn-primary btn-sm">Sign In</a>
+    </div>
+  } @else {
+    
+    <div class="profile-grid">
+      
+      <!-- Left Column: User Identity Card -->
+      <div class="identity-card card">
+        <div class="avatar-wrap">
+          <div class="user-big-avatar">
+            {{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}
+          </div>
+          <span class="active-dot" title="Account Active"></span>
+        </div>
+
+        <h2 class="user-fullname">{{ user.name }}</h2>
+        <span class="user-email-text">{{ user.email }}</span>
+
+        <div class="role-badge-row">
+          <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
+            <i class="fa-solid fa-shield-halved"></i> {{ user.role }}
+          </span>
+          <span class="badge badge-status">
+            <i class="fa-solid fa-circle-check text-emerald-500"></i> Active
+          </span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="user-meta-list">
+          <div class="meta-item">
+            <span class="meta-label">User ID (UUID)</span>
+            <div class="meta-value-copy">
+              <code>{{ user.id }}</code>
+              <button class="copy-btn" (click)="copyUserId()" title="Copy User ID">
+                <i class="fa-solid" [class.fa-copy]="!copiedId" [class.fa-check]="copiedId"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">Member Since</span>
+            <span class="meta-value">{{ formatDate(user.createdAt) }}</span>
+          </div>
+
+          <div class="meta-item">
+            <span class="meta-label">Account Security</span>
+            <span class="meta-value text-emerald-600 font-semibold">
+              <i class="fa-solid fa-lock"></i> JWT Protected (24h)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Role Privileges & Quick Links -->
+      <div class="details-column">
+        
+        <!-- Shipping & Delivery Address Card (Customer USER only - Hidden for Admin & Sales Person) -->
+        @if (user.role === 'USER') {
+          <div class="address-card card">
+            <div class="card-head justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-location-dot text-rose-500"></i>
+                <div>
+                  <h3 class="card-head-title">Delivery & Shipping Address</h3>
+                  <p class="card-head-desc">Online orders and shipment receipts are directed to this address</p>
+                </div>
+              </div>
+              @if (!isEditingAddress) {
+                <button class="btn btn-secondary btn-sm" (click)="startEditAddress()">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit Address
+                </button>
+              }
+            </div>
+
+            @if (isEditingAddress) {
+              <div class="address-edit-box">
+                <textarea
+                  [(ngModel)]="editAddressText"
+                  rows="3"
+                  placeholder="Enter complete delivery address (House/Flat No, Street, Landmark, City, State, PIN)..."
+                  class="address-textarea"
+                ></textarea>
+                <div class="edit-actions">
+                  <button
+                    class="btn btn-primary btn-sm"
+                    [disabled]="isSavingAddress || !editAddressText.trim()"
+                    (click)="saveAddress()"
+                  >
+                    @if (isSavingAddress) {
+                      <i class="fa-solid fa-spinner fa-spin"></i> Saving...
+                    } @else {
+                      <i class="fa-solid fa-check"></i> Save Address
+                    }
+                  </button>
+                  <button class="btn btn-secondary btn-sm" (click)="cancelEditAddress()" [disabled]="isSavingAddress">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            } @else {
+              <div class="address-display-box">
+                @if (user.address) {
+                  <div class="address-content">
+                    <p class="address-text">{{ user.address }}</p>
+                    <span class="address-verified-badge">
+                      <i class="fa-solid fa-circle-check text-emerald-500"></i> Verified Shipping Destination
+                    </span>
+                  </div>
+                } @else {
+                  <div class="no-address-box">
+                    <p class="text-muted">No delivery address saved yet.</p>
+                    <button class="btn btn-primary btn-sm" (click)="startEditAddress()">
+                      <i class="fa-solid fa-plus"></i> Add Delivery Address
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Role Privileges Card -->
+        <div class="privileges-card card">
+          <div class="card-head">
+            <i class="fa-solid fa-id-card-clip"></i>
+            <div>
+              <h3 class="card-head-title">Assigned RBAC Privileges</h3>
+              <p class="card-head-desc">Role-based access permissions governing this account</p>
+            </div>
+          </div>
+
+          <div class="privileges-content">
+            @if (user.role === 'ADMIN') {
+              <div class="role-desc-box role-admin-box">
+                <div class="box-title"><i class="fa-solid fa-crown text-amber-500"></i> System Administrator Privileges</div>
+                <ul class="privilege-list">
+                  <li><i class="fa-solid fa-check"></i> Complete platform oversight: orders, users, and merchant inventory</li>
+                  <li><i class="fa-solid fa-check"></i> View and manage all platform customer orders and update delivery stages</li>
+                  <li><i class="fa-solid fa-check"></i> Provision new users and assign RBAC roles (ADMIN, SALES_PERSON, USER)</li>
+                  <li><i class="fa-solid fa-check"></i> Daily Bank Account balance tracking and Razorpay settlement metrics</li>
+                </ul>
+              </div>
+            } @else if (user.role === 'SALES_PERSON') {
+              <div class="role-desc-box role-seller-box">
+                <div class="box-title"><i class="fa-solid fa-store text-blue-500"></i> Retail Merchant Privileges</div>
+                <ul class="privilege-list">
+                  <li><i class="fa-solid fa-check"></i> Dedicated seller portal to list and retail products on NexusMarket</li>
+                  <li><i class="fa-solid fa-check"></i> Cloudinary image uploads and inventory stock control</li>
+                  <li><i class="fa-solid fa-check"></i> Real-time orders tracking for products retailed by your store</li>
+                  <li><i class="fa-solid fa-check"></i> Sales revenue and merchant performance analytics</li>
+                </ul>
+              </div>
+            } @else {
+              <div class="role-desc-box role-user-box">
+                <div class="box-title"><i class="fa-solid fa-basket-shopping text-emerald-500"></i> Verified Customer Privileges</div>
+                <ul class="privilege-list">
+                  <li><i class="fa-solid fa-check"></i> Browse all verified tech and lifestyle essentials from multi-vendor merchants</li>
+                  <li><i class="fa-solid fa-check"></i> Real-time shopping cart and wishlists synchronized with your profile</li>
+                  <li><i class="fa-solid fa-check"></i> Razorpay payments with instant automated order receipt emails</li>
+                  <li><i class="fa-solid fa-check"></i> Personal order history tracking and shipment status updates</li>
+                </ul>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Quick Navigation Card -->
+        <div class="quick-nav-card card">
+          <h3 class="card-head-title mb-4">Quick Account Shortcuts</h3>
+          
+          <div class="quick-buttons-grid">
+            @if (user.role === 'USER') {
+              <a routerLink="/orders/my" class="quick-btn">
+                <i class="fa-solid fa-box text-blue-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">My Orders</span>
+                  <span class="quick-btn-desc">View order history and receipts</span>
+                </div>
+              </a>
+
+              <a routerLink="/cart" class="quick-btn">
+                <i class="fa-solid fa-cart-shopping text-emerald-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Shopping Cart</span>
+                  <span class="quick-btn-desc">Review cart items & checkout</span>
+                </div>
+              </a>
+
+              <a routerLink="/wishlist" class="quick-btn">
+                <i class="fa-solid fa-heart text-rose-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Saved Wishlist</span>
+                  <span class="quick-btn-desc">Products you saved for later</span>
+                </div>
+              </a>
+
+              <a routerLink="/" class="quick-btn">
+                <i class="fa-solid fa-store text-indigo-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Browse Store</span>
+                  <span class="quick-btn-desc">Explore 30 handcrafted essentials</span>
+                </div>
+              </a>
+            } @else if (user.role === 'SALES_PERSON') {
+              <a routerLink="/seller/dashboard" class="quick-btn">
+                <i class="fa-solid fa-chart-line text-blue-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Seller Dashboard</span>
+                  <span class="quick-btn-desc">View sales orders & store performance</span>
+                </div>
+              </a>
+
+              <a routerLink="/seller/products" class="quick-btn">
+                <i class="fa-solid fa-boxes-stacked text-indigo-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Store Inventory</span>
+                  <span class="quick-btn-desc">Add, update, or remove products</span>
+                </div>
+              </a>
+            } @else {
+              <a routerLink="/admin/dashboard" class="quick-btn">
+                <i class="fa-solid fa-chart-pie text-purple-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Admin Dashboard</span>
+                  <span class="quick-btn-desc">Daily bank balance & platform analytics</span>
+                </div>
+              </a>
+
+              <a routerLink="/admin/orders" class="quick-btn">
+                <i class="fa-solid fa-list-check text-blue-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">Global Orders</span>
+                  <span class="quick-btn-desc">Manage all platform purchases</span>
+                </div>
+              </a>
+
+              <a routerLink="/admin/users" class="quick-btn">
+                <i class="fa-solid fa-user-shield text-emerald-500"></i>
+                <div class="quick-btn-info">
+                  <span class="quick-btn-title">RBAC User Provisioning</span>
+                  <span class="quick-btn-desc">Create merchants and administrators</span>
+                </div>
+              </a>
+            }
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>
+

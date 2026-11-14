@@ -1,0 +1,104 @@
+<div class="container seller-page">
+  
+  <!-- Store Header Banner -->
+  <div class="store-banner card">
+    <div class="store-badge-icon"><i class="fa-solid fa-store"></i></div>
+    <div class="store-info">
+      <div class="store-title-row">
+        <h1 class="store-name">{{ authService.currentUser()?.name }}</h1>
+        <span class="badge badge-seller1">Verified Retail Merchant</span>
+      </div>
+      <p class="store-meta">
+        Store ID: <code>{{ authService.currentUser()?.email }}</code> · Active Marketplace Inventory
+      </p>
+    </div>
+    <div class="store-actions">
+      <a routerLink="/seller/products" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-boxes-stacked"></i> Manage Inventory
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI METRICS -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading store analytics...
+    </div>
+  } @else if (dashboard) {
+    <div class="kpi-grid">
+      
+      <div class="kpi-card card">
+        <div class="kpi-header">
+          <span class="kpi-label">Products Owned</span>
+          <div class="kpi-icon icon-blue"><i class="fa-solid fa-box"></i></div>
+        </div>
+        <div class="kpi-value">{{ dashboard.totalProductsOwned }}</div>
+        <span class="kpi-sub">Active in Marketplace</span>
+      </div>
+
+      <div class="kpi-card card">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Units Sold</span>
+          <div class="kpi-icon icon-emerald"><i class="fa-solid fa-cart-check"></i></div>
+        </div>
+        <div class="kpi-value">{{ dashboard.totalItemsSold }}</div>
+        <span class="kpi-sub">From Customer Orders</span>
+      </div>
+
+      <div class="kpi-card card">
+        <div class="kpi-header">
+          <span class="kpi-label">Sales Revenue</span>
+          <div class="kpi-icon icon-indigo"><i class="fa-solid fa-money-bill-wave"></i></div>
+        </div>
+        <div class="kpi-value text-indigo-600">₹{{ formatPrice(dashboard.totalSalesRevenue) }}</div>
+        <span class="kpi-sub">Settled Store Earnings</span>
+      </div>
+
+    </div>
+
+    <!-- RECENT SOLD ITEMS -->
+    <div class="recent-sales-card card">
+      <div class="card-header">
+        <h3 class="card-title">Recent Sales Order Items</h3>
+        <span class="card-meta">Filtered by your seller ownership ID</span>
+      </div>
+
+      @if (dashboard.recentSoldItems.length === 0) {
+        <div class="no-sales">
+          <i class="fa-solid fa-box-open"></i> No sales recorded yet. Customer purchases will appear here in real-time.
+        </div>
+      } @else {
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Order Status</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of dashboard.recentSoldItems; track item.id) {
+                <tr>
+                  <td class="font-bold text-main">{{ item.productName }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="getOrderStatusBadge(item.order?.orderStatus || 'CONFIRMED')">
+                      {{ item.order?.orderStatus || 'CONFIRMED' }}
+                    </span>
+                  </td>
+                  <td>{{ item.quantity }}</td>
+                  <td>₹{{ formatPrice(item.price) }}</td>
+                  <td class="font-extrabold text-main">₹{{ formatPrice(item.subtotal) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+

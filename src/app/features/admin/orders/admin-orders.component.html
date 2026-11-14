@@ -1,0 +1,142 @@
+<div class="container admin-orders-page">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Global Order Management</h1>
+      <p class="page-subtitle">View and update delivery statuses across all customer purchases</p>
+    </div>
+    <div class="filter-pills">
+      <button class="pill" [class.active]="statusFilter === ''" (click)="filterStatus('')">All</button>
+      <button class="pill" [class.active]="statusFilter === 'CONFIRMED'" (click)="filterStatus('CONFIRMED')">Confirmed</button>
+      <button class="pill" [class.active]="statusFilter === 'PROCESSING'" (click)="filterStatus('PROCESSING')">Processing</button>
+      <button class="pill" [class.active]="statusFilter === 'SHIPPED'" (click)="filterStatus('SHIPPED')">Shipped</button>
+      <button class="pill" [class.active]="statusFilter === 'DELIVERED'" (click)="filterStatus('DELIVERED')">Delivered</button>
+    </div>
+  </div>
+
+  <!-- SEARCH & AMOUNT FILTER TOOLBAR -->
+  <div class="admin-filter-bar card">
+    <div class="filter-row">
+      <div class="search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="applyFilters()"
+          placeholder="Search by order ID, customer name, customer email, product..."
+          class="input-field"
+        />
+        @if (searchQuery) {
+          <button class="clear-icon-btn" (click)="searchQuery = ''; applyFilters()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+
+      <div class="amount-range-wrap">
+        <span class="range-label">Amount:</span>
+        <input
+          type="number"
+          [(ngModel)]="minAmount"
+          (input)="applyFilters()"
+          placeholder="Min ₹"
+          class="price-input"
+        />
+        <span class="range-sep">-</span>
+        <input
+          type="number"
+          [(ngModel)]="maxAmount"
+          (input)="applyFilters()"
+          placeholder="Max ₹"
+          class="price-input"
+        />
+      </div>
+
+      @if (hasActiveFilters()) {
+        <button class="btn btn-secondary btn-sm" (click)="resetFilters()">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading platform orders...
+    </div>
+  } @else if (orders.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+      <h3>No orders match criteria</h3>
+      <p>Orders submitted by customers via checkout will be listed here.</p>
+    </div>
+  } @else if (filteredOrders.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-filter"></i></div>
+      <h3>No orders match your filter criteria</h3>
+      <p>Try modifying your search query or price/amount range.</p>
+      <button class="btn btn-secondary btn-sm" (click)="resetFilters()">Clear Filters</button>
+    </div>
+  } @else {
+    <div class="table-card card">
+      <div class="table-wrap">
+        <table class="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Items Purchased</th>
+              <th>Date</th>
+              <th>Total Amount</th>
+              <th>Payment</th>
+              <th>Update Order Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of filteredOrders; track o.id) {
+              <tr>
+                <td><code>{{ o.id.substring(0, 10) }}...</code></td>
+                <td>
+                  <div class="cust-info">
+                    <span class="cust-name">{{ o.user?.name || 'Customer' }}</span>
+                    <span class="cust-email">{{ o.user?.email }}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="items-summary">
+                    @for (i of o.items; track i.id) {
+                      <span class="item-tag">{{ i.productName }} (x{{ i.quantity }})</span>
+                    }
+                  </div>
+                </td>
+                <td class="text-xs">{{ formatDate(o.createdAt) }}</td>
+                <td class="font-extrabold text-main">₹{{ formatPrice(o.totalAmount) }}</td>
+                <td>
+                  <span class="badge" [class.badge-seller2]="o.paymentStatus === 'PAID'">
+                    {{ o.paymentStatus }}
+                  </span>
+                </td>
+                <td>
+                  <select
+                    [ngModel]="o.orderStatus"
+                    (ngModelChange)="onStatusChange(o, $event)"
+                    class="status-select"
+                  >
+                    <option value="PENDING">PENDING</option>
+                    <option value="CONFIRMED">CONFIRMED</option>
+                    <option value="PROCESSING">PROCESSING</option>
+                    <option value="SHIPPED">SHIPPED</option>
+                    <option value="DELIVERED">DELIVERED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </select>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+</div>
+

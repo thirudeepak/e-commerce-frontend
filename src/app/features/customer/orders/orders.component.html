@@ -1,0 +1,92 @@
+<div class="container orders-page">
+  
+  <div class="orders-header">
+    <h1 class="page-title">My Orders</h1>
+    <p class="page-subtitle">Track your order statuses and review payment receipts</p>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading orders...
+    </div>
+  } @else if (orders.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+      <h3>No orders placed yet</h3>
+      <p>Once you complete a purchase via Razorpay, your order summary and tracking will appear here.</p>
+      <a routerLink="/" class="btn btn-primary btn-sm">Start Shopping</a>
+    </div>
+  } @else {
+    <div class="orders-list space-y-4">
+      @for (order of orders; track order.id) {
+        <div class="order-card card">
+          
+          <!-- Order Card Header -->
+          <div class="order-card-header">
+            <div class="header-left">
+              <div class="order-id">
+                <span>Order:</span> <code>{{ order.id.substring(0, 13) }}...</code>
+              </div>
+              <div class="order-date">
+                <i class="fa-regular fa-calendar"></i> {{ formatDate(order.createdAt) }}
+              </div>
+            </div>
+
+            <div class="header-right">
+              <span class="badge" [ngClass]="getOrderStatusBadge(order.orderStatus)">
+                <i class="fa-solid fa-truck-fast"></i> {{ order.orderStatus }}
+              </span>
+              <span class="badge" [ngClass]="getPaymentStatusBadge(order.paymentStatus)">
+                <i class="fa-solid fa-credit-card"></i> {{ order.paymentStatus }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Line Items -->
+          <div class="order-items-list">
+            @for (item of order.items; track item.id) {
+              <div class="order-item-row">
+                <img
+                  [src]="getItemImage(item)"
+                  [alt]="item.productName"
+                  class="order-item-thumb"
+                />
+                <div class="order-item-info">
+                  <h4 class="item-name">{{ item.productName }}</h4>
+                  <span class="item-meta">Qty: {{ item.quantity }} × ₹{{ formatPrice(item.price) }}</span>
+                </div>
+                <div class="item-row-total">
+                  ₹{{ formatPrice(item.subtotal) }}
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Delivery Address -->
+          @if (order.deliveryAddress) {
+            <div class="order-delivery-address">
+              <i class="fa-solid fa-location-dot text-rose-500"></i>
+              <span><strong>Delivering to:</strong> {{ order.deliveryAddress }}</span>
+            </div>
+          }
+
+          <!-- Order Card Footer -->
+          <div class="order-card-footer">
+            <div class="payment-meta">
+              @if (order.razorpayPaymentId) {
+                <span>Razorpay Ref: <code>{{ order.razorpayPaymentId }}</code></span>
+              }
+            </div>
+            <div class="order-total-box">
+              <span class="total-label">Grand Total:</span>
+              <span class="total-value">₹{{ formatPrice(order.totalAmount) }}</span>
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>
+

@@ -1,0 +1,98 @@
+<header class="navbar-wrapper">
+  <div class="container navbar-container">
+    
+    <!-- Logo -->
+    <a routerLink="/" class="navbar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+      <span class="brand-name">NexusMarket</span>
+    </a>
+
+    <!-- Search input -->
+    <div class="navbar-search">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+        placeholder="Search audio, watches, electronics..."
+        class="search-input"
+      />
+    </div>
+
+    <!-- Role-Based Navigation Links -->
+    <nav class="navbar-nav">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+        <i class="fa-solid fa-shop"></i> Store
+      </a>
+
+      @if (authService.isAuthenticated()) {
+        <!-- Admin Links -->
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-chart-pie"></i> Admin
+          </a>
+          <a routerLink="/admin/orders" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-list-check"></i> Orders
+          </a>
+          <a routerLink="/admin/users" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-user-shield"></i> RBAC Users
+          </a>
+        }
+
+        <!-- Sales Person / Retailer Links -->
+        @if (authService.isSeller()) {
+          <a routerLink="/seller/dashboard" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-chart-line"></i> Seller Portal
+          </a>
+          <a routerLink="/seller/products" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-boxes-stacked"></i> My Inventory
+          </a>
+        }
+
+        <!-- Customer Only Shopping Links (Hidden for Admin & Sales Person) -->
+        @if (authService.isCustomer()) {
+          <a routerLink="/wishlist" routerLinkActive="active" class="nav-link badge-link">
+            <i class="fa-solid fa-heart"></i> Wishlist
+            @if (wishlistService.wishlistCount() > 0) {
+              <span class="nav-badge">{{ wishlistService.wishlistCount() }}</span>
+            }
+          </a>
+
+          <a routerLink="/cart" routerLinkActive="active" class="nav-link badge-link">
+            <i class="fa-solid fa-cart-shopping"></i> Cart
+            @if (cartService.cartCount() > 0) {
+              <span class="nav-badge badge-cart">{{ cartService.cartCount() }}</span>
+            }
+          </a>
+
+          <a routerLink="/orders/my" routerLinkActive="active" class="nav-link">
+            <i class="fa-solid fa-box"></i> My Orders
+          </a>
+        }
+      }
+    </nav>
+
+    <!-- Auth Actions / Profile -->
+    <div class="navbar-actions">
+      @if (authService.isAuthenticated()) {
+        <a routerLink="/profile" class="user-pill" title="View My Profile">
+          <span class="user-avatar"><i class="fa-solid fa-user"></i></span>
+          <div class="user-info">
+            <span class="user-name">{{ authService.currentUser()?.name }}</span>
+            <span class="user-role badge" [ngClass]="getRoleBadgeClass(authService.currentUser()?.role)">
+              {{ authService.currentUser()?.role }}
+            </span>
+          </div>
+        </a>
+        <button class="btn btn-secondary btn-sm" (click)="onLogout()" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      } @else {
+        <a routerLink="/login" class="btn btn-secondary btn-sm">Sign In</a>
+        <a routerLink="/register" class="btn btn-primary btn-sm">Register</a>
+      }
+    </div>
+
+  </div>
+</header>
+

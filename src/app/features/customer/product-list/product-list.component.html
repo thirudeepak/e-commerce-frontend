@@ -1,0 +1,209 @@
+<div class="storefront-container">
+  
+  <!-- HERO PROMO BANNER -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <i class="fa-solid fa-bolt text-amber-400"></i> Multi-Vendor E-Commerce Platform
+      </div>
+      <h1 class="hero-title">Discover 30 Handcrafted Tech & Lifestyle Essentials</h1>
+      <p class="hero-desc">
+        Directly retailed by verified merchants <strong>Apex Electronics & Audio</strong> and <strong>Prime Gear & Lifestyle</strong>.
+      </p>
+      <div class="hero-badges">
+        <span class="hero-badge"><i class="fa-solid fa-store"></i> 2 Verified Retailers</span>
+        <span class="hero-badge"><i class="fa-solid fa-boxes-stacked"></i> 30 Products Live</span>
+        <span class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Razorpay Protected</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER & TOOLBAR -->
+  <div class="toolbar card">
+    <!-- Categories Horizontal Scroll -->
+    <div class="category-scroll">
+      @for (cat of categories; track cat) {
+        <button
+          class="cat-pill"
+          [class.active]="selectedCategory === cat"
+          (click)="onSelectCategory(cat)"
+        >
+          {{ cat }}
+        </button>
+      }
+    </div>
+
+    <div class="toolbar-bottom">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchKeyword"
+          (keyup.enter)="onSearchSubmit()"
+          placeholder="Search by keyword, product, brand..."
+          class="input-field"
+        />
+        @if (searchKeyword.trim()) {
+          <button class="clear-btn" (click)="clearSearch()" title="Clear search">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+        <button class="btn btn-primary btn-sm search-submit-btn" (click)="onSearchSubmit()">
+          Search
+        </button>
+      </div>
+
+      <div class="filter-controls">
+        <div class="price-inputs">
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            (keyup.enter)="applyPriceFilter()"
+            placeholder="Min ₹"
+            class="price-field"
+          />
+          <span class="price-separator">-</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            (keyup.enter)="applyPriceFilter()"
+            placeholder="Max ₹"
+            class="price-field"
+          />
+          <button class="btn btn-secondary btn-sm apply-btn" (click)="applyPriceFilter()" title="Apply Price Filter">
+            Apply
+          </button>
+        </div>
+
+        <select [(ngModel)]="sortBy" (change)="loadProducts()" class="sort-select">
+          <option value="createdAt:DESC">Newest First</option>
+          <option value="price:ASC">Price: Low to High</option>
+          <option value="price:DESC">Price: High to Low</option>
+          <option value="name:ASC">Name: A to Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Filters Summary Bar -->
+    @if (hasActiveFilters()) {
+      <div class="active-filters-bar">
+        <span class="active-label"><i class="fa-solid fa-filter"></i> Active Filters:</span>
+        @if (selectedCategory !== 'All') {
+          <span class="filter-tag" (click)="onSelectCategory('All')">
+            Category: {{ selectedCategory }} <i class="fa-solid fa-xmark"></i>
+          </span>
+        }
+        @if (searchKeyword.trim()) {
+          <span class="filter-tag" (click)="clearSearch()">
+            Keyword: "{{ searchKeyword }}" <i class="fa-solid fa-xmark"></i>
+          </span>
+        }
+        @if (minPrice !== null || maxPrice !== null) {
+          <span class="filter-tag" (click)="clearPriceFilter()">
+            Price: ₹{{ minPrice || 0 }} - ₹{{ maxPrice || 'Any' }} <i class="fa-solid fa-xmark"></i>
+          </span>
+        }
+        <button class="btn-clear-all" (click)="resetFilters()">Reset All</button>
+      </div>
+    }
+  </div>
+
+  <!-- PRODUCTS STATUS -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span>Loading catalog...</span>
+    </div>
+  } @else if (products.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+      <h3>No products found</h3>
+      <p>Try clearing filters or search keywords</p>
+      <button class="btn btn-secondary btn-sm" (click)="resetFilters()">Reset Filters</button>
+    </div>
+  } @else {
+    <!-- PRODUCTS GRID -->
+    <div class="product-grid">
+      @for (p of products; track p.id) {
+        <div class="product-card card">
+          
+          <!-- Image & Badges -->
+          <div class="product-image-container">
+            <a [routerLink]="['/products', p.id]">
+              <img
+                [src]="getProductImage(p)"
+                [alt]="p.name"
+                class="product-image"
+                loading="lazy"
+              />
+            </a>
+            
+            <!-- Retailer Owner Badge -->
+            <span class="seller-badge badge" [ngClass]="getSellerBadgeClass(p.owner?.name)">
+              <i class="fa-solid fa-store"></i> {{ p.owner?.name || 'Retailer' }}
+            </span>
+
+            <!-- Wishlist Toggle (Restricted: USER only, hidden for Admin & Sales Person) -->
+            @if (canShop()) {
+              <button
+                class="wishlist-btn"
+                [class.active]="isInWishlist(p.id)"
+                (click)="toggleWishlist(p)"
+                title="Save to Wishlist"
+              >
+                <i class="fa-solid fa-heart"></i>
+              </button>
+            }
+          </div>
+
+          <!-- Product Info -->
+          <div class="product-body">
+            <div class="product-header">
+              <span class="product-category">{{ p.category }}</span>
+              <a [routerLink]="['/products', p.id]" class="product-title-link">
+                <h3 class="product-title">{{ p.name }}</h3>
+              </a>
+              <p class="product-desc">{{ p.description }}</p>
+            </div>
+
+            <div class="product-footer">
+              <div class="price-row">
+                <span class="product-price">₹{{ formatPrice(p.price) }}</span>
+                <span class="stock-badge badge" [class.badge-stock-in]="p.stock > 0" [class.badge-stock-out]="p.stock <= 0">
+                  {{ p.stock > 0 ? (p.stock + ' in stock') : 'Out of Stock' }}
+                </span>
+              </div>
+
+              <!-- Cart Actions (Restricted: Add to cart is USER only; Admin/Seller gets View Details) -->
+              @if (canShop()) {
+                <button
+                  class="btn btn-primary btn-block btn-sm"
+                  [disabled]="p.stock <= 0 || isAddingToCart(p.id)"
+                  (click)="addToCart(p)"
+                >
+                  @if (isAddingToCart(p.id)) {
+                    <i class="fa-solid fa-spinner fa-spin"></i> Adding...
+                  } @else {
+                    <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                  }
+                </button>
+              } @else {
+                <a [routerLink]="['/products', p.id]" class="btn btn-secondary btn-block btn-sm">
+                  <i class="fa-solid fa-eye"></i> View Details
+                </a>
+              }
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+
+    <!-- TOTAL COUNT -->
+    <div class="catalog-summary">
+      Showing {{ products.length }} of {{ totalCount }} products
+    </div>
+  }
+
+</div>
+

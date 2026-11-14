@@ -1,0 +1,118 @@
+<div class="container detail-container">
+  
+  <a routerLink="/" class="back-link">
+    <i class="fa-solid fa-arrow-left"></i> Back to Catalog
+  </a>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading product details...
+    </div>
+  } @else if (!product) {
+    <div class="empty-state card">
+      <h3>Product Not Found</h3>
+      <p>The requested product is no longer active or available.</p>
+      <a routerLink="/" class="btn btn-primary btn-sm">Return to Store</a>
+    </div>
+  } @else {
+    <div class="detail-grid">
+      
+      <!-- Image Gallery -->
+      <div class="gallery-col card">
+        <div class="main-image-wrap">
+          <img [src]="activeImageUrl" [alt]="product.name" class="main-image" />
+        </div>
+        @if (product.images && product.images.length > 1) {
+          <div class="thumb-list">
+            @for (img of product.images; track img.publicId) {
+              <button class="thumb-btn" [class.active]="activeImageUrl === img.url" (click)="activeImageUrl = img.url">
+                <img [src]="img.url" class="thumb-img" [alt]="product.name" />
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Product Details & CTA -->
+      <div class="info-col space-y-4">
+        
+        <div class="badge-row">
+          <span class="badge" [ngClass]="getSellerBadgeClass(product.owner?.name)">
+            <i class="fa-solid fa-store"></i> {{ product.owner?.name || 'Retailer' }}
+          </span>
+          <span class="badge badge-category">{{ product.category }}</span>
+        </div>
+
+        <h1 class="product-title">{{ product.name }}</h1>
+
+        <div class="price-box">
+          <span class="current-price">₹{{ formatPrice(product.price) }}</span>
+          <span class="stock-tag badge" [class.badge-stock-in]="product.stock > 0" [class.badge-stock-out]="product.stock <= 0">
+            {{ product.stock > 0 ? (product.stock + ' units available in stock') : 'Out of stock' }}
+          </span>
+        </div>
+
+        <div class="desc-box card">
+          <h4 class="desc-title">Product Description</h4>
+          <p class="desc-text">{{ product.description || 'No detailed description provided.' }}</p>
+        </div>
+
+        <!-- Seller Merchant Card -->
+        <div class="seller-card card">
+          <div class="seller-avatar"><i class="fa-solid fa-shop"></i></div>
+          <div class="seller-info">
+            <span class="seller-label">Verified Merchant Seller</span>
+            <span class="seller-name">{{ product.owner?.name }}</span>
+            <span class="seller-email">{{ product.owner?.email }}</span>
+          </div>
+        </div>
+
+        <!-- Purchase Controls (Restricted: USER only, hidden for Admin & Sales Person) -->
+        @if (canShop()) {
+          <div class="purchase-box card">
+            <div class="qty-row">
+              <label class="qty-label">Quantity:</label>
+              <div class="qty-picker">
+                <button (click)="decreaseQty()" [disabled]="quantity <= 1">-</button>
+                <input type="number" [(ngModel)]="quantity" [min]="1" [max]="product.stock" readonly />
+                <button (click)="increaseQty()" [disabled]="quantity >= product.stock">+</button>
+              </div>
+            </div>
+
+            <div class="action-buttons">
+              <button
+                class="btn btn-primary btn-block"
+                [disabled]="product.stock <= 0 || isAdding"
+                (click)="addToCart()"
+              >
+                <i class="fa-solid fa-cart-plus"></i> Add {{ quantity }} to Cart
+              </button>
+              <button
+                class="btn btn-secondary btn-block"
+                (click)="toggleWishlist()"
+              >
+                <i class="fa-solid fa-heart"></i> Save to Wishlist
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="purchase-box card role-restricted-card">
+            <div class="role-restricted-content">
+              <i class="fa-solid fa-shield-halved restricted-icon"></i>
+              <div>
+                <h4 class="restricted-title">Management Role ({{ authService.currentUser()?.role }})</h4>
+                <p class="restricted-desc">
+                  Cart, purchasing, and wishlist actions are reserved exclusively for customer accounts.
+                </p>
+              </div>
+            </div>
+          </div>
+        }
+
+      </div>
+
+    </div>
+  }
+
+</div>
+

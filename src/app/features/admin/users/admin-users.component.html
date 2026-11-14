@@ -1,0 +1,128 @@
+<div class="container rbac-page">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">RBAC User Provisioning & Permissions</h1>
+      <p class="page-subtitle">Create new platform accounts with role-based access control</p>
+    </div>
+  </div>
+
+  <!-- PROVISIONING FORM CARD -->
+  <div class="form-card card">
+    <div class="card-header">
+      <div class="header-icon"><i class="fa-solid fa-user-shield"></i></div>
+      <div>
+        <h3 class="card-title">Create User with RBAC Role</h3>
+        <p class="card-desc">Target API: <code>POST /api/auth/admin/create-user</code> (Guarded by ADMIN role)</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="onCreateUser()" class="user-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name or Business Name *</label>
+          <input type="text" [(ngModel)]="name" name="name" required class="input-field" placeholder="e.g. Apex South Retailer" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" [(ngModel)]="email" name="email" required class="input-field" placeholder="merchant@ecommerce.com" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Initial Password *</label>
+          <input type="password" [(ngModel)]="password" name="password" required minlength="6" class="input-field" placeholder="••••••••" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Assigned RBAC Role *</label>
+          <select [(ngModel)]="role" name="role" required class="input-field">
+            <option value="SALES_PERSON">SALES_PERSON (Retailer Merchant)</option>
+            <option value="USER">USER (Customer)</option>
+            <option value="ADMIN">ADMIN (System Administrator)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Role Explanation Box -->
+      <div class="role-preview-box">
+        <span class="preview-title"><i class="fa-solid fa-circle-info"></i> Role Capabilities for <strong>{{ role }}</strong>:</span>
+        <ul class="cap-list">
+          @if (role === 'ADMIN') {
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Full platform access, order status management, user creation.</li>
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Real-time Daily Bank Account Balance & financial settlements.</li>
+          } @else if (role === 'SALES_PERSON') {
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Owns and manages a dedicated product inventory in the marketplace.</li>
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Views sales orders for products retailed by their store.</li>
+          } @else {
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Browses and purchases products from verified retail stores.</li>
+            <li><i class="fa-solid fa-check text-emerald-500"></i> Real-time cart management, wishlist, and Razorpay checkout.</li>
+          }
+        </ul>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        @if (isSubmitting) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Provisioning User...
+        } @else {
+          <i class="fa-solid fa-plus"></i> Provision RBAC User
+        }
+      </button>
+    </form>
+  </div>
+
+  <!-- ACTIVE SEEDED DIRECTORY -->
+  <div class="directory-card card">
+    <h3 class="dir-title">Pre-Seeded Active User Directory</h3>
+    <div class="dir-grid">
+      
+      <div class="user-chip">
+        <div class="chip-icon bg-amber-100 text-amber-700"><i class="fa-solid fa-shield-halved"></i></div>
+        <div>
+          <span class="chip-name">Super Admin</span>
+          <span class="chip-email">admin&#64;ecommerce.com</span>
+          <span class="badge badge-role-admin">ADMIN</span>
+        </div>
+      </div>
+
+      <div class="user-chip">
+        <div class="chip-icon bg-indigo-100 text-indigo-700"><i class="fa-solid fa-store"></i></div>
+        <div>
+          <span class="chip-name">Apex Electronics</span>
+          <span class="chip-email">seller1&#64;ecommerce.com</span>
+          <span class="badge badge-seller1">SALES_PERSON (10 prods)</span>
+        </div>
+      </div>
+
+      <div class="user-chip">
+        <div class="chip-icon bg-emerald-100 text-emerald-700"><i class="fa-solid fa-store"></i></div>
+        <div>
+          <span class="chip-name">Prime Gear & Lifestyle</span>
+          <span class="chip-email">seller2&#64;ecommerce.com</span>
+          <span class="badge badge-seller2">SALES_PERSON (20 prods)</span>
+        </div>
+      </div>
+
+      <div class="user-chip">
+        <div class="chip-icon bg-slate-100 text-slate-700"><i class="fa-solid fa-user"></i></div>
+        <div>
+          <span class="chip-name">Alice Customer</span>
+          <span class="chip-email">alice&#64;ecommerce.com</span>
+          <span class="badge badge-role-user">USER (4 Wishlist)</span>
+        </div>
+      </div>
+
+      <div class="user-chip">
+        <div class="chip-icon bg-slate-100 text-slate-700"><i class="fa-solid fa-user"></i></div>
+        <div>
+          <span class="chip-name">Bob Customer</span>
+          <span class="chip-email">bob&#64;ecommerce.com</span>
+          <span class="badge badge-role-user">USER (4 Wishlist)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+

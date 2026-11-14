@@ -1,0 +1,137 @@
+<div class="container cart-page">
+  
+  <div class="cart-header">
+    <div>
+      <h1 class="page-title">Shopping Cart</h1>
+      <p class="page-subtitle">Verified in real-time from server catalog</p>
+    </div>
+    @if (cart && cart.items && cart.items.length > 0) {
+      <button class="btn btn-secondary btn-sm" (click)="clearCart()">
+        <i class="fa-solid fa-trash-can"></i> Clear Cart
+      </button>
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading cart...
+    </div>
+  } @else if (!cart || !cart.items || cart.items.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+      <h3>Your cart is empty</h3>
+      <p>Explore 30 products retailed by verified merchants and add them to your cart.</p>
+      <a routerLink="/" class="btn btn-primary btn-sm">Start Shopping</a>
+    </div>
+  } @else {
+    <div class="cart-layout">
+      
+      <!-- ITEMS LIST -->
+      <div class="cart-items-col space-y-3">
+        @for (item of cart.items; track item.id) {
+          <div class="cart-item-card card">
+            
+            <img
+              [src]="getItemImage(item)"
+              [alt]="item.product?.name || 'Product'"
+              class="item-thumb"
+            />
+
+            <div class="item-details">
+              <span class="seller-tag badge badge-seller1">
+                <i class="fa-solid fa-store"></i> Verified Merchant
+              </span>
+              <a [routerLink]="['/products', item.productId]" class="item-title-link">
+                <h4 class="item-title">{{ item.product?.name || 'Product Item' }}</h4>
+              </a>
+              <div class="item-unit-price">₹{{ formatPrice(item.price) }} / unit</div>
+            </div>
+
+            <!-- Quantity Controls -->
+            <div class="qty-control">
+              <button (click)="updateQuantity(item, item.quantity - 1)" [disabled]="item.quantity <= 1">-</button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="updateQuantity(item, item.quantity + 1)">+</button>
+            </div>
+
+            <!-- Subtotal -->
+            <div class="item-subtotal">
+              <span class="subtotal-amount">₹{{ formatPrice(item.subtotal) }}</span>
+              <button class="remove-btn" (click)="removeItem(item)" title="Remove Item">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+
+          </div>
+        }
+      </div>
+
+      <!-- SUMMARY & CHECKOUT CARD -->
+      <div class="summary-col">
+        <div class="summary-card card">
+          <h3 class="summary-title">Order Summary</h3>
+          
+          <div class="summary-rows">
+            <div class="summary-row">
+              <span>Total Items</span>
+              <span>{{ cart.totalItems }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>₹{{ formatPrice(cart.subtotal) }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span class="text-emerald-600 font-semibold">FREE</span>
+            </div>
+            <div class="summary-row">
+              <span>Payment Gateway</span>
+              <span class="text-indigo-600 font-semibold">Razorpay Test</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="summary-row total-row">
+              <span>Total Due</span>
+              <span class="total-amount">₹{{ formatPrice(cart.totalAmount) }}</span>
+            </div>
+          </div>
+
+          <!-- Delivery Address Preview -->
+          <div class="delivery-address-box">
+            <div class="delivery-head">
+              <span class="delivery-label">
+                <i class="fa-solid fa-location-dot text-rose-500"></i> Delivering to:
+              </span>
+              <a routerLink="/profile" class="edit-link" title="Change Address in Profile">Change</a>
+            </div>
+            <p class="delivery-text">
+              {{ authService.currentUser()?.address || 'No address saved. Click Change to add address.' }}
+            </p>
+          </div>
+
+          <!-- Razorpay Checkout CTA -->
+          <button
+            class="btn btn-primary btn-block checkout-btn"
+            [disabled]="isCheckingOut"
+            (click)="proceedToCheckout()"
+          >
+            @if (isCheckingOut) {
+              <i class="fa-solid fa-spinner fa-spin"></i> Initializing Payment...
+            } @else {
+              <i class="fa-solid fa-lock"></i> Pay with Razorpay (₹{{ formatPrice(cart.totalAmount) }})
+            }
+          </button>
+
+          <div class="security-note">
+            <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+            <span>ACID Concurrency & HMAC-SHA256 Signature Verification</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+</div>
+

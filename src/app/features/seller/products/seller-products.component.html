@@ -1,0 +1,210 @@
+<div class="container seller-products-page">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Manage Store Inventory</h1>
+      <p class="page-subtitle">View, create, update, or remove products retailed by your store</p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="openAddModal()">
+      <i class="fa-solid fa-plus"></i> Add New Product
+    </button>
+  </div>
+
+  <!-- SEARCH & FILTER TOOLBAR -->
+  <div class="seller-filter-toolbar card">
+    <div class="filter-row">
+      <div class="search-input-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          [(ngModel)]="searchKeyword"
+          (input)="applyFilters()"
+          placeholder="Search products by title, description..."
+          class="input-field"
+        />
+        @if (searchKeyword) {
+          <button class="clear-icon-btn" (click)="searchKeyword = ''; applyFilters()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        }
+      </div>
+
+      <div class="filter-controls-group">
+        <select [(ngModel)]="selectedCategory" (change)="applyFilters()" class="filter-select">
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
+        </select>
+
+        <div class="price-range-wrap">
+          <input
+            type="number"
+            [(ngModel)]="minPrice"
+            (input)="applyFilters()"
+            placeholder="Min ₹"
+            class="price-input"
+          />
+          <span class="range-sep">-</span>
+          <input
+            type="number"
+            [(ngModel)]="maxPrice"
+            (input)="applyFilters()"
+            placeholder="Max ₹"
+            class="price-input"
+          />
+        </div>
+
+        @if (hasActiveFilters()) {
+          <button class="btn btn-secondary btn-sm" (click)="resetFilters()">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY TABLE -->
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading inventory...
+    </div>
+  } @else if (products.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+      <h3>No products in your store yet</h3>
+      <p>Click the button above to add your first product to NexusMarket.</p>
+      <button class="btn btn-primary btn-sm" (click)="openAddModal()">Add Product</button>
+    </div>
+  } @else if (filteredProducts.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-filter"></i></div>
+      <h3>No matching products found</h3>
+      <p>Try modifying your search keywords or price range filters.</p>
+      <button class="btn btn-secondary btn-sm" (click)="resetFilters()">Clear Filters</button>
+    </div>
+  } @else {
+    <div class="table-card card">
+      <div class="table-wrap">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Unit Price</th>
+              <th>Available Stock</th>
+              <th>Owner</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of filteredProducts; track p.id) {
+              <tr>
+                <td>
+                  <div class="prod-cell">
+                    <img [src]="getImage(p)" [alt]="p.name" class="cell-thumb" />
+                    <div>
+                      <a [routerLink]="['/products', p.id]" class="cell-title">{{ p.name }}</a>
+                      <span class="cell-desc">{{ p.description || 'No description' }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="badge cat-badge">{{ p.category }}</span></td>
+                <td class="font-bold">₹{{ formatPrice(p.price) }}</td>
+                <td>
+                  <span class="badge" [class.badge-stock-in]="p.stock > 0" [class.badge-stock-out]="p.stock <= 0">
+                    {{ p.stock }} units
+                  </span>
+                </td>
+                <td class="text-xs text-muted">{{ p.owner?.name || 'You' }}</td>
+                <td>
+                  <div class="action-btns">
+                    <a [routerLink]="['/products', p.id]" class="btn btn-secondary btn-sm" title="View Product Page">
+                      <i class="fa-solid fa-eye"></i>
+                    </a>
+                    <button class="btn btn-secondary btn-sm" (click)="openEditModal(p)" title="Edit">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" (click)="deleteProduct(p)" title="Delete">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  @if (isModalOpen) {
+    <div class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h3>
+          <button class="modal-close-btn" (click)="closeModal()">&times;</button>
+        </div>
+
+        <form (ngSubmit)="saveProduct()" class="modal-form">
+          <div class="form-group">
+            <label class="form-label">Product Name *</label>
+            <input type="text" [(ngModel)]="formName" name="name" required class="input-field" placeholder="e.g. Wireless Headset" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category *</label>
+            <select [(ngModel)]="formCategory" name="category" required class="input-field">
+              <option value="Audio">Audio</option>
+              <option value="Wearables">Wearables</option>
+              <option value="Computer Peripherals">Computer Peripherals</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Smart Home">Smart Home</option>
+              <option value="Lifestyle & Gear">Lifestyle & Gear</option>
+              <option value="Storage">Storage</option>
+              <option value="Office">Office</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Price (₹) *</label>
+              <input type="number" step="0.01" [(ngModel)]="formPrice" name="price" required class="input-field" placeholder="2499.00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Stock Units *</label>
+              <input type="number" [(ngModel)]="formStock" name="stock" required class="input-field" placeholder="25" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea [(ngModel)]="formDescription" name="description" rows="3" class="input-field" placeholder="Key features, specs..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Upload Images to Cloudinary (up to 5)</label>
+            <input type="file" (change)="onFileSelected($event)" multiple accept="image/png, image/jpeg, image/webp" class="input-field" />
+            
+            @if (imagePreviewUrl) {
+              <div class="upload-preview-wrap">
+                <span class="preview-label">Image Preview:</span>
+                <img [src]="imagePreviewUrl" alt="Upload Preview" class="upload-preview-img" />
+              </div>
+            }
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+              @if (isSaving) { <i class="fa-solid fa-spinner fa-spin"></i> Saving... }
+              @else { <i class="fa-solid fa-cloud-arrow-up"></i> Save Product }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+</div>

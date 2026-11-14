@@ -1,0 +1,88 @@
+<div class="auth-page">
+  <div class="auth-card card">
+    <div class="auth-header">
+      <div class="auth-logo"><i class="fa-solid fa-user-plus"></i></div>
+      <h2 class="auth-title">Create an Account</h2>
+      <p class="auth-subtitle">Join NexusMarket as a Customer or Retail Merchant</p>
+    </div>
+
+    <form (ngSubmit)="onRegister()" class="auth-form">
+      <div class="form-group">
+        <label class="form-label">Full Name or Store Name</label>
+        <input
+          type="text"
+          [(ngModel)]="name"
+          name="name"
+          required
+          class="input-field"
+          placeholder="e.g. Alice Smith or Apex Tech"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          class="input-field"
+          placeholder="you@example.com"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password (min 6 characters)</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          minlength="6"
+          class="input-field"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">I want to register as:</label>
+        <div class="role-selector">
+          <label class="role-option" [class.selected]="role === 'USER'">
+            <input type="radio" [(ngModel)]="role" name="role" value="USER" />
+            <div class="role-box">
+              <i class="fa-solid fa-bag-shopping"></i>
+              <div>
+                <span class="role-name">Customer</span>
+                <span class="role-desc">Shop products from retailers</span>
+              </div>
+            </div>
+          </label>
+
+          <label class="role-option" [class.selected]="role === 'SALES_PERSON'">
+            <input type="radio" [(ngModel)]="role" name="role" value="SALES_PERSON" />
+            <div class="role-box">
+              <i class="fa-solid fa-store"></i>
+              <div>
+                <span class="role-name">Sales Person / Store</span>
+                <span class="role-desc">Sell and manage inventory</span>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="isLoading">
+        @if (isLoading) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Registering...
+        } @else {
+          Create Account <i class="fa-solid fa-arrow-right"></i>
+        }
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a routerLink="/login" class="auth-link">Sign In</a>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,67 @@
+<div class="container wishlist-page">
+  
+  <div class="wishlist-header">
+    <div>
+      <h1 class="page-title">My Wishlist</h1>
+      <p class="page-subtitle">Saved products from your preferred retailers</p>
+    </div>
+    @if (wishlist && wishlist.items && wishlist.items.length > 0) {
+      <button class="btn btn-secondary btn-sm" (click)="clearWishlist()">
+        <i class="fa-solid fa-trash-can"></i> Clear All
+      </button>
+    }
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading wishlist...
+    </div>
+  } @else if (!wishlist || !wishlist.items || wishlist.items.length === 0) {
+    <div class="empty-state card">
+      <div class="empty-icon"><i class="fa-solid fa-heart-crack"></i></div>
+      <h3>Your wishlist is empty</h3>
+      <p>Tap the heart icon on any product in the store to save it here.</p>
+      <a routerLink="/" class="btn btn-primary btn-sm">Browse Products</a>
+    </div>
+  } @else {
+    <div class="wishlist-grid">
+      @for (item of wishlist.items; track item.id) {
+        <div class="wishlist-card card">
+          <div class="card-image-wrap">
+            <img [src]="getItemImage(item)" [alt]="item.product?.name || 'Product'" class="card-img" />
+            <span class="seller-badge badge" [ngClass]="getSellerBadgeClass(item.product?.owner?.name)">
+              <i class="fa-solid fa-store"></i> {{ item.product?.owner?.name || 'Retailer' }}
+            </span>
+            <button class="remove-wishlist-btn" (click)="removeItem(item)" title="Remove">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <div class="card-content">
+            <span class="card-cat">{{ item.product?.category }}</span>
+            <a [routerLink]="['/products', item.productId]" class="card-title-link">
+              <h4 class="card-title">{{ item.product?.name }}</h4>
+            </a>
+            
+            <div class="card-price-row">
+              <span class="card-price">₹{{ formatPrice(item.product?.price) }}</span>
+              <span class="card-stock badge" [class.badge-stock-in]="(item.product?.stock || 0) > 0">
+                {{ (item.product?.stock || 0) > 0 ? 'In Stock' : 'Out of Stock' }}
+              </span>
+            </div>
+
+            <button
+              class="btn btn-primary btn-block btn-sm"
+              [disabled]="(item.product?.stock || 0) <= 0"
+              (click)="moveToCart(item)"
+            >
+              <i class="fa-solid fa-cart-plus"></i> Move to Cart
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+

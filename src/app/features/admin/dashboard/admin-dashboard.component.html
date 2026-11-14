@@ -1,0 +1,144 @@
+<div class="container admin-page">
+  
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Platform Administration & Governance</h1>
+      <p class="page-subtitle">Centralized analytics, financial bank balances, and RBAC controls</p>
+    </div>
+    <div class="quick-links">
+      <a routerLink="/admin/users" class="btn btn-secondary btn-sm">
+        <i class="fa-solid fa-user-shield"></i> Provision RBAC User
+      </a>
+      <a routerLink="/admin/orders" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-list-check"></i> Manage All Orders
+      </a>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-circle-notch fa-spin"></i> Loading platform intelligence...
+    </div>
+  } @else if (dashboard) {
+    
+    <!-- BANK ACCOUNT & DAILY SETTLEMENT (NEW REQUIREMENT) -->
+    <div class="bank-card card">
+      <div class="bank-card-header">
+        <div class="bank-icon-wrap">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div class="bank-title-box">
+          <div class="bank-title-row">
+            <h3 class="bank-title">Platform Central Bank Account & Settlements</h3>
+            <span class="badge badge-seller2">Automated Razorpay Node</span>
+          </div>
+          <p class="bank-desc">ACID transaction reconciliation and real-time bank ledger balances</p>
+        </div>
+        <div class="bank-time">
+          <i class="fa-solid fa-clock-rotate-left"></i> Verified Live
+        </div>
+      </div>
+
+      <div class="bank-metrics-grid">
+        <div class="bank-metric-box">
+          <span class="metric-label">Today's Settled Bank Balance</span>
+          <div class="metric-value text-emerald-400">
+            ₹{{ formatPrice(dashboard.bankAccount.dailyBankBalance || 0) }}
+          </div>
+          <span class="metric-caption">Captured payments settled today</span>
+        </div>
+
+        <div class="bank-metric-box">
+          <span class="metric-label">Total Platform Bank Balance</span>
+          <div class="metric-value text-white">
+            ₹{{ formatPrice(dashboard.bankAccount.totalBankBalance || 0) }}
+          </div>
+          <span class="metric-caption">Cumulative settled merchant volume</span>
+        </div>
+
+        <div class="bank-metric-box">
+          <span class="metric-label">Pending Settlements</span>
+          <div class="metric-value text-amber-300">
+            ₹{{ formatPrice(dashboard.bankAccount.pendingSettlements || 0) }}
+          </div>
+          <span class="metric-caption">Unconfirmed customer checkouts</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLATFORM METRICS -->
+    <div class="kpi-grid">
+      <div class="kpi-card card">
+        <span class="kpi-label">Registered Customers</span>
+        <div class="kpi-value">{{ dashboard.totalUsers }}</div>
+        <span class="kpi-sub">Role: USER</span>
+      </div>
+
+      <div class="kpi-card card">
+        <span class="kpi-label">Retail Merchants</span>
+        <div class="kpi-value text-indigo-600">{{ dashboard.totalSalesPersons }}</div>
+        <span class="kpi-sub">Role: SALES_PERSON</span>
+      </div>
+
+      <div class="kpi-card card">
+        <span class="kpi-label">Marketplace Products</span>
+        <div class="kpi-value">{{ dashboard.totalProducts }}</div>
+        <span class="kpi-sub">Across 2 Retailers</span>
+      </div>
+
+      <div class="kpi-card card">
+        <span class="kpi-label">Total Orders</span>
+        <div class="kpi-value text-emerald-600">{{ dashboard.totalOrders }}</div>
+        <span class="kpi-sub">Total Captured Volume</span>
+      </div>
+    </div>
+
+    <!-- RECENT PLATFORM ORDERS -->
+    <div class="table-card card">
+      <div class="card-header">
+        <h3 class="card-title">Recent Platform Orders (Platform-Wide)</h3>
+        <a routerLink="/admin/orders" class="view-all-link">View All Orders &rarr;</a>
+      </div>
+
+      @if (dashboard.recentOrders.length === 0) {
+        <div class="no-data">No orders recorded yet.</div>
+      } @else {
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Total Due</th>
+                <th>Payment</th>
+                <th>Order Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of dashboard.recentOrders; track order.id) {
+                <tr>
+                  <td class="font-bold"><code>{{ order.id.substring(0, 10) }}...</code></td>
+                  <td>{{ order.user?.name || 'Customer' }} ({{ order.user?.email }})</td>
+                  <td>{{ formatDate(order.createdAt) }}</td>
+                  <td class="font-bold">₹{{ formatPrice(order.totalAmount) }}</td>
+                  <td>
+                    <span class="badge" [class.badge-seller2]="order.paymentStatus === 'PAID'">
+                      {{ order.paymentStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge badge-seller1">{{ order.orderStatus }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+  }
+
+</div>
+
