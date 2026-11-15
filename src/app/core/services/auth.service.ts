@@ -12,7 +12,7 @@ import { ApiResponse } from '../models/api-response.model';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.apiUrl}`;
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   // Signals
   currentUser = signal<User | null>(this.getStoredUser());
